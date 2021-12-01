@@ -1,7 +1,6 @@
-# amanurk-arushuk-sskuruva-a3
-a3 created for amanurk-arushuk-sskuruva
 
 ## Part 1: Part of Speech Tagging
+
 Goal of this problem is to mark each word in the sentence with its part of speech.
 The given training data has 12 parts of speeches and they are followed by the word in the sentence.
 There are three different Baye's net model that needs to be modeled using training data and accuracy for the
