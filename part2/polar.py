@@ -49,6 +49,7 @@ def draw_asterisk(image, pt, color, thickness):
 # (yellow, blue, red) to the filename
 def write_output_image(filename, image, simple, hmm, feedback, feedback_pt):
     new_image = draw_boundary(image, simple, (255, 255, 0), 2)
+    print(hmm)
     new_image = draw_boundary(new_image, hmm, (0, 0, 255), 2)
     new_image = draw_boundary(new_image, feedback, (255, 0, 0), 2)
     new_image = draw_asterisk(new_image, feedback_pt, (255, 0, 0), 2)
@@ -67,29 +68,75 @@ def hmm(edge_strength_matrix, p_transition):
     for col in range(col_size):
         for row in range(row_size):
             col_sums[col] += edge_strength_matrix[row][col]
-
+    s = sum(col_sums)
     # initialise probabilities
     for row in range(row_size):
-        p_state[row][0] = edge_strength_matrix[row][0] / col_sums[0]
+        # initial probability * observation probability
+        # p_state[row][0] = edge_strength_matrix[row][0] * (edge_strength_matrix[row][0] / col_sums[0])
+        p_state[row][0] = edge_strength_matrix[row][0] / s
+
 
     # calculating state probabilities of each node using viterbi
-    for col in range(1, col_size):
-        for row in range(row_size):
-            p_maximum = 0
-            for j in range(-4, 5):
-                if (row + j < row_size) and (row + j >= 0):
-                    if p_maximum < (p_state[row + j][col - 1] * p_transition[abs(j)]):
-                        p_maximum = p_state[row + j][col - 1] * p_transition[abs(j)]
-                        back_pointer[row][col] = row + j
-                    p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
+    # for col in range(1, col_size):
+    #     for row in range(row_size):
+    #         p_maximum = 0
+    #         for j in range(-4, 5):
+    #             if (row + j < row_size) and (row + j >= 0):
+    #                 if p_maximum < p_state[row + j][col - 1] * p_transition[abs(j)]:
+    #                     p_maximum = p_state[row + j][col - 1] * p_transition[abs(j)]
+    #                     back_pointer[row][col] = row + j
+    #                 p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
+    p_state, back_pointer = viterbi_recur(
+        (1, col_size, 1),
+        (0, row_size, 1),
+        col_size, row_size,
+        p_state,
+        back_pointer,
+        edge_strength_matrix,
+        p_transition_offset
+    )
+    viterbi = back_track(p_state, col_size, viterbi, back_pointer)
+    # p_max_index = argmax(p_state[:, col_size - 1])
+    #
+    # for col in range(col_size - 1, -1, -1):
+    #     viterbi[col] = int(p_max_index)
+    #     p_max_index = back_pointer[int(p_max_index)][col]
 
+    return viterbi, p_state, back_pointer
+
+
+def back_track(p_state, col_size, viterbi, back_pointer):
     p_max_index = argmax(p_state[:, col_size - 1])
-
     for col in range(col_size - 1, -1, -1):
         viterbi[col] = int(p_max_index)
         p_max_index = back_pointer[int(p_max_index)][col]
+    return viterbi
 
-    return viterbi, p_state
+
+def viterbi_recur(col_loop, row_loop, col_size, row_size, p_state, back_pointer, edge_strength_matrix,
+                  p_transition_offset):
+    col_start, col_stop, col_step = col_loop
+    row_start, row_stop, row_step = row_loop
+
+    for col in range(col_start, col_stop, col_step):
+        for row in range(row_start, row_stop, row_step):
+            p_maximum = 0
+            for j in range(-4, 5):
+                if (row + j < row_size) and (row + j >= 0):
+                    if p_maximum < p_state[row + j][col - 1] * p_transition_offset[abs(j)]:
+                        p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
+                        back_pointer[row][col] = row + j
+                    p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
+    # for col in range(col_start, col_stop, col_step):
+    #     for row in range(row_start, row_stop, row_step):
+    #         p_maximum = 0
+    #         for j in range(-2, 3):
+    #             if (row + j < row_size) and (row + j >= 0):
+    #                 if p_maximum < p_state[row + j][col - 1] * p_transition_offset[abs(j)]:
+    #                     p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
+    #                     back_pointer[row][col] = row + j
+    #                 p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
+    return p_state, back_pointer
 
 
 # main program
@@ -113,6 +160,8 @@ if __name__ == "__main__":
     imageio.imwrite('edges.png', uint8(255 * edge_strength_matrix / (amax(edge_strength_matrix))))
     import pdb
 
+    col_size = edge_strength_matrix.shape[1]
+    row_size = edge_strength_matrix.shape[0]
     # ********************** Simplified ***************************************************
     airice_simple = argmax(edge_strength_matrix, axis=0)
     edge_strength_matrix = edge_strength_matrix.tolist()
@@ -131,20 +180,75 @@ if __name__ == "__main__":
     # ********************** Viterbi-AirIce ***************************************************
 
     edge_strength_matrix = edge_strength(input_image)
-    #
     p_transition_offset = [0.5, 0.4, 0.1, 0.5, 0.005]
-    airice_hmm, airice_p_state = hmm(edge_strength_matrix, p_transition_offset)
+    airice_hmm, airice_p_state, airice_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
+
+    # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
+    # tweak probability distribution
+    for row in range(row_size):
+        airice_p_state[row][gt_airice[0]] = 0
+    airice_p_state[gt_airice[1]][gt_airice[0]] = 1
+    # update forward
+    p_state, airice_back_pointer = viterbi_recur(
+        (gt_airice[0] - 1, 0, -1),
+        (gt_airice[1] - 1, -1, -1),
+        col_size, row_size,
+        airice_p_state,
+        airice_back_pointer,
+        edge_strength_matrix,
+        p_transition_offset
+    )
+    # update backward
+    p_state, airice_back_pointer = viterbi_recur(
+        (gt_airice[0] + 1, col_size, 1),
+        (0, row_size, 1),
+        col_size, row_size,
+        airice_p_state,
+        airice_back_pointer,
+        edge_strength_matrix,
+        p_transition_offset
+    )
+    airice_feedback = back_track(p_state, col_size, airice_hmm, airice_back_pointer)
+    # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
     # ********************** Viterbi-AirIce ***************************************************
 
     # ********************** Viterbi-IceRock ***************************************************
+    # remove air-ice boundary
     for index, y_coord in enumerate(airice_hmm):
         i = 0
         while i < 12:
-            edge_strength_matrix[int(y_coord) - i][index] = -1
-            edge_strength_matrix[int(y_coord) + i][index] = -1
+            edge_strength_matrix[int(y_coord) - i][index] = 0
+            edge_strength_matrix[int(y_coord) + i][index] = 0
             i += 1
 
-    icerock_hmm, icerock_p_state = hmm(edge_strength_matrix, p_transition_offset)
+    icerock_hmm, icerock_p_state, icerock_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
+    # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
+    # tweak probability distribution
+    for row in range(row_size):
+        icerock_p_state[row][gt_icerock[0]] = 0
+    icerock_p_state[gt_icerock[1]][gt_icerock[0]] = 1
+    # update forward
+    icerock_p_state, icerock_back_pointer = viterbi_recur(
+        (gt_icerock[0] - 1, 0, -1),
+        (gt_icerock[1] - 1, -1, -1),
+        col_size, row_size,
+        icerock_p_state,
+        icerock_back_pointer,
+        edge_strength_matrix,
+        p_transition_offset
+    )
+    # update backward
+    icerock_p_state, icerock_back_pointer = viterbi_recur(
+        (gt_icerock[0] + 1, col_size, 1),
+        (0, row_size, 1),
+        col_size, row_size,
+        icerock_p_state,
+        icerock_back_pointer,
+        edge_strength_matrix,
+        p_transition_offset
+    )
+    icerock_feedback = back_track(icerock_p_state, col_size, icerock_hmm, icerock_back_pointer)
+    # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
     # ********************** Viterbi-IceRock ***************************************************
 
     edge_strength_matrix = edge_strength(input_image)
@@ -153,11 +257,10 @@ if __name__ == "__main__":
     # just create some random lines.
     # airice_simple = [image_array.shape[0] * 0.25] * image_array.shape[1]
     # airice_hmm = [image_array.shape[0] * 0.5] * image_array.shape[1]
-    airice_feedback = [image_array.shape[0] * 0.75] * image_array.shape[1]
-
+    # airice_feedback = [image_array.shape[0] * 0.75] * image_array.shape[1]
     # icerock_simple = [image_array.shape[0] * 0.25] * image_array.shape[1]
     # icerock_hmm = [image_array.shape[0] * 0.5] * image_array.shape[1]
-    icerock_feedback = [image_array.shape[0] * 0.75] * image_array.shape[1]
+    # icerock_feedback = [image_array.shape[0] * 0.75] * image_array.shape[1]
 
     # Now write out the results as images and a text file
     write_output_image("air_ice_output.png", input_image, airice_simple, airice_hmm, airice_feedback, gt_airice)
