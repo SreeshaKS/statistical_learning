@@ -49,7 +49,6 @@ def draw_asterisk(image, pt, color, thickness):
 # (yellow, blue, red) to the filename
 def write_output_image(filename, image, simple, hmm, feedback, feedback_pt):
     new_image = draw_boundary(image, simple, (255, 255, 0), 2)
-    print(hmm)
     new_image = draw_boundary(new_image, hmm, (0, 0, 255), 2)
     new_image = draw_boundary(new_image, feedback, (255, 0, 0), 2)
     new_image = draw_asterisk(new_image, feedback_pt, (255, 0, 0), 2)
@@ -93,7 +92,7 @@ def hmm(edge_strength_matrix, p_transition):
         p_state,
         back_pointer,
         edge_strength_matrix,
-        p_transition_offset
+        p_transition
     )
     viterbi = back_track(p_state, col_size, viterbi, back_pointer)
     # p_max_index = argmax(p_state[:, col_size - 1])
