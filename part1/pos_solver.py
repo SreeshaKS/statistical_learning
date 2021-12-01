@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 30 12:56:03 2021
-@author: Amruta
-"""
 
 import random
 import math
@@ -16,200 +11,181 @@ class Solver:
     # Calculate the log of the posterior probability of a given sentence
     #  with a given part-of-speech labeling. Right now just returns -999 -- fix this!
     def __init__(self):
-        self.minProb = float(1) / float(10 ** 10)
+        self.minProb = float(1) / float(10**10)
         self.p_initial = {}
         # transition probabilities
         self.p_transition = {}
-
+        
         # P(wi|posTag) - emission probability
         self.p_emission = {}
         # total number of words which occur under a particular tag
         self.words = {}
-        # total number of pos tags
+        #total number of pos tags
         self.pos = {}
-        #
 
-    def posterior(self, model, sentence, label):
-        # posterior = 0
-
-        # for i in range(len(sentence)):
-        #     if (sentence[i], label[i]) in self.p_emission:
-        #         prob= self.p_emission[(sentence[i],label[i])]
-        #     else:
-        #         prob=self.minProb  #setting min prob value for words which are not in training data
-        #     posterior+=math.log(prob*self.pos[label[i]])
+    def posterior(self, model, sentence, label):               
 
         if model == "Simple":
             posterior = 0
-            for i in range(len(sentence)):
-
+            for i in range(len(sentence)):                             
                 if (sentence[i], label[i]) in self.p_emission:
-                    prob = self.p_emission[(sentence[i], label[i])]
+                    posterior += math.log(self.p_emission[(sentence[i],label[i])])
                 else:
-                    prob = self.minProb  # setting min prob value for words which are not in training data
-                posterior += math.log(prob * self.pos[label[i]])
+                    posterior += self.minProb  #setting min prob value for words which are not in training data
+                posterior+=math.log(self.pos[label[i]]) 
             return posterior
+        
         elif model == "HMM":
             posterior = 0
             for i in range(len(sentence)):
                 if (sentence[i], label[i]) in self.p_emission:
-                    posterior += math.log(self.p_emission[(sentence[i], label[i])])
-                # if i == 0:
-                # posterior += math.log(self.transition_prob[label[i]][" "])
-                # posterior += math.log(self.p_transition[(label[i], "")])
-                else:
-                    # posterior += math.log(self.transition_prob[label[i]][label[i-1]])
-                    posterior += math.log(self.p_transition[(label[i], label[i - 1])])
+                    posterior += math.log(self.p_emission[(sentence[i],label[i])])
 
+                else:
+                    posterior += math.log(self.p_transition[(label[i],label[i-1])])                
             return posterior
 
         elif model == "Complex":
             return -999
+        
         else:
             print("Unknown algo!")
 
     # Do the training!
     #
     def train(self, data):
-
-        total_pos_count = 0
+ 
+        total_pos_count=0
         for sentence in data:
             dict_words = sentence[0]
-
+            
             dict_pos = sentence[1]
-            for i in range(0, len(dict_words)):
-                # Updating words count
+            for i in range(0,len(dict_words)):
+                #Updating words count
                 if dict_words[i] not in self.words:
-                    self.words.update({dict_words[i]: 1})
+                    self.words.update({dict_words[i]:1})
                 else:
-                    self.words[dict_words[i]] = self.words[dict_words[i]] + 1
-                # updating pos tags count
-                if dict_pos[i] not in self.pos:
-                    self.pos.update({dict_pos[i]: 1})
-                    total_pos_count += 1
+                    self.words[dict_words[i]]=self.words[dict_words[i]]+1
+                #updating pos tags count
+                if  dict_pos[i] not in self.pos:
+                    self.pos.update({dict_pos[i]:1})
+                    total_pos_count +=1      
                 else:
-                    self.pos[dict_pos[i]] = self.pos[dict_pos[i]] + 1
-                    total_pos_count += 1
-                # Initial pos tags count
-                if i == 0:
+                    self.pos[dict_pos[i]]=self.pos[dict_pos[i]]+1
+                    total_pos_count +=1
+                #Initial pos tags count
+                if i==0:
                     if dict_pos[i] not in self.p_initial:
-                        self.p_initial.update({dict_pos[i]: 1})
+                        self.p_initial.update({dict_pos[i]:1})
                     else:
-                        self.p_initial[dict_pos[i]] = self.p_initial[dict_pos[i]] + 1
+                        self.p_initial[dict_pos[i]]=self.p_initial[dict_pos[i]]+1            
                 else:
                     # Other than initial are set as 0
                     if dict_pos[i] not in self.p_initial:
-                        self.p_initial.update({dict_pos[i]: 0})
-                        # Transition prob count
-                    elif (dict_pos[i - 1], dict_pos[i]) not in self.p_transition:
-                        self.p_transition.update({(dict_pos[i - 1], dict_pos[i]): 1})
+                        self.p_initial.update({dict_pos[i]:0})                    
+                    # Transition prob count
+                    elif (dict_pos[i-1],dict_pos[i]) not in self.p_transition:
+                        self.p_transition.update({(dict_pos[i-1],dict_pos[i]):1})        
                     else:
-                        self.p_transition[(dict_pos[i - 1], dict_pos[i])] = self.p_transition[
-                                                                                (dict_pos[i - 1], dict_pos[i])] + 1
+                        self.p_transition[(dict_pos[i-1],dict_pos[i])]=self.p_transition[(dict_pos[i-1],dict_pos[i])]+1
                 # emission probability count
 
-                if (dict_words[i], dict_pos[i]) not in self.p_emission:
-                    self.p_emission.update({(dict_words[i], dict_pos[i]): 1})
+                if (dict_words[i],dict_pos[i]) not in self.p_emission:
+                    self.p_emission.update({(dict_words[i],dict_pos[i]):1})       
                 else:
-                    self.p_emission[(dict_words[i], dict_pos[i])] = self.p_emission[(dict_words[i], dict_pos[i])] + 1
-
+                    self.p_emission[(dict_words[i],dict_pos[i])]=self.p_emission[(dict_words[i],dict_pos[i])]+1
+                
         # initial probability
-        for key, value in self.p_initial.items():
-            if value == 0:
-                self.p_initial[key] = self.minProb
-            else:
-                self.p_initial[key] = float(self.p_initial[key]) / float(self.pos[key])
+        for key,value in self.p_initial.items():
+            if value==0:
+                self.p_initial[key]=self.minProb
+            else:    
+                self.p_initial[key]=float(self.p_initial[key])/float(self.pos[key])
         # emission probability
         for key in self.p_emission:
-            self.p_emission[key] = float(self.p_emission[key]) / float(self.pos[key[1]])
-            # Values that dont exist in training set
+            self.p_emission[key]=float(self.p_emission[key])/float(self.pos[key[1]]) 
+        #Values that dont exist in training set
         for i in self.words:
             for j in self.pos:
-                if (i, j) not in self.p_emission:
-                    self.p_emission.update({(i, j): self.minProb})
-
-                    # transition probability
+                if (i,j) not in self.p_emission:
+                    self.p_emission.update({(i,j):self.minProb})   
+ 
+        # transition probability
         for key in self.p_transition:
-            self.p_transition[key] = float(self.p_transition[key]) / float(self.pos[key[0]])
-
+            self.p_transition[key]=float(self.p_transition[key])/float(self.pos[key[0]])
+        
         # For values that dont exist in training set
         for i in self.pos:
             for j in self.pos:
-                if (i, j) not in self.p_transition:
-                    self.p_transition.update({(i, j): self.minProb})
-
+                if (i,j) not in self.p_transition:
+                    self.p_transition.update({(i,j):self.minProb})
+       
+ 
         # pos probability
         for key in self.pos:
-            self.pos[key] = float(self.pos[key]) / float(total_pos_count)
+            self.pos[key]=float(self.pos[key])/float(total_pos_count)
         print('Done Training')
 
     # Functions for each algorithm. Right now this just returns nouns -- fix this!
     #
     def simplified(self, sentence):
-        pos_word_mapping = []
+        pos_word_mapping=[]
         for word in sentence:
-            max_probability = 0
-            pos_word = ""
+            max_probability=0
+            pos_word=""
             for pos in self.pos:
-                if (word, pos) in self.p_emission:
-                    pb = self.p_emission[(word, pos)] * self.pos[pos]
-                else:
-                    pb = self.minProb
-                if pb > max_probability:
-                    max_probability = pb
-                    pos_word = pos
-            pos_word_mapping.append(pos_word)
+                if (word,pos) in self.p_emission:  
+                    pb=self.p_emission[(word,pos)]*self.pos[pos]
+                else:    
+                    pb=self.minProb
+                if pb>max_probability:
+                    max_probability=pb
+                    pos_word=pos
+            pos_word_mapping.append(pos_word)        
         return pos_word_mapping
 
+
     def hmm_viterbi(self, sentence):
-        most_probable_pos = []
-        most_probable_pos_return = []
-
-        # Table to implement Viterbi Algorithm
-        viterbi_table = [[0] * len(self.pos) for i in range(len(sentence))]
-        pos_list = []
-
-        # List of unique tags
+        #Creating VITERBI TABLE for Viterbi Algorithm
+        
+        viterbi=[[0]*len(self.pos)for i in range(len(sentence))]
+        unique_tags=[]
         for key in self.pos:
-            pos_list.append(key)
-
-        # Viterbi Algorithm
-        for i in range(0, len(sentence)):
-            for j in range(0, len(pos_list)):
-                if (sentence[i], pos_list[j]) not in self.p_emission:
-                    prob = 0.0000000001
+            unique_tags.append(key)
+        pos_word_mapping=[]
+        pos_word_mapping_01=[]
+        for i in range(len(sentence)):
+            for j in range(len(unique_tags)):
+                if (sentence[i],unique_tags[j]) in self.p_emission:
+                    pb=self.p_emission[(sentence[i],unique_tags[j])]                    
                 else:
-                    prob = self.p_emission[(sentence[i], pos_list[j])]
+                    pb=self.minProb
 
-                # For first word, Vij=P(Si)*P(Wi|Si)
-                if i == 0:
-                    viterbi_table[i][j] = self.p_initial[pos_list[j]] * prob
-
-                # For words that aren't the first, Vij=P(Wi|Si)*max(VIJ*P(SI|SI-1))
-                else:
-                    k = 0
-                    max_vt = 0.0
-                    for v in viterbi_table[i - 1]:
-                        v_transition = v * self.p_transition[(pos_list[k], pos_list[j])]
-                        if max_vt < v_transition:
-                            max_vt = v_transition
-                        k = k + 1
-                    viterbi_table[i][j] = prob * max_vt
-
-        # Extracting the most probable tag fromeh viterbi table
-        for i in range(len(viterbi_table) - 1, -1, -1):
-            most_probable_pos.append(pos_list[viterbi_table[i].index(max(viterbi_table[i]))])
-        for i in range(len(most_probable_pos) - 1, -1, -1):
-            most_probable_pos_return.append(most_probable_pos[i])
-
-        return most_probable_pos_return
-        # return ["noun"] * len(sentence)
+                if i==0: # for initial word
+                    viterbi[i][j]=self.p_initial[unique_tags[j]]*pb
+                
+                else: # for all subsequent words
+                    x = 0
+                    y = 0
+                   
+                    for v in viterbi[i-1]:
+                        v_trans=v*self.p_transition[(unique_tags[x],unique_tags[j])]
+                        if y<v_trans:
+                            y=v_trans
+                        x += 1
+                    viterbi[i][j]=pb*y
+        # pos prabables 
+        for i in range(len(viterbi)-1,-1,-1):
+            pos_word_mapping.append(unique_tags[viterbi[i].index(max(viterbi[i]))])
+        for i in range(len(pos_word_mapping)-1,-1,-1):    
+            pos_word_mapping_01.append(pos_word_mapping[i])
+        return pos_word_mapping_01
 
     def complex_mcmc(self, sentence):
         return ["noun"] * len(sentence)
 
     # This solve() method is called by label.py, so you should keep the interface the
-    #  same, but you can change the code itself.
+    #  same, but you can change the code itself. 
     # It should return a list of part-of-speech labelings of the sentence, one
     #  part of speech per word.
     #
