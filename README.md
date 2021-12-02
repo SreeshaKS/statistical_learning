@@ -16,6 +16,15 @@
 A basic problems in Natural Language Processing is part-of-speech tagging, in which the goal is to mark every word in a sentence with its part of speech (noun, verb, adjective, etc.). Sometimes this is easy: a sentence like “Blueberries are blue” clearly consists of a noun, verb, and adjective, since each of these words has only one possible part of speech (e.g., “blueberries” is a noun but can’t be a verb).
 Your goal in this part is to implement part-of-speech tagging in Python, using Bayes networks.
 
+#### Approach
+Goal of this problem is to mark each word in the sentence with its part of speech. The given training data has 12 parts of speeches, and they are followed by the word in the sentence. There are three different Baye's net model that needs to be modeled using training data and accuracy for the not seen data has to be predicted using these models.
+Using Training data, we found the initial probabilities, emission probability P(wi | si) and transition probabilities p(Si | Si-1). We also stored the part of speech tags and words in an dictianary along with part of speech probabilities. Probabilities for words which are not observed in the training set are set to be 1/10^10.
+
+- Simplified model: This model uses basics of Bayes Nets. Each word in the sentence is associated to only one part of speech tag. and select the best among them. THe max probability of the word given the part of speech is multiplied by part of speech probability to get the final results.
+- For the Viterbi model: In this model, words have more than one independence to each other than the simple word to pos dependency. We used the maximum probability till each word in the sentence. and also the max proability in the state before which are pre-calculated.
+- Posterior: Simple: Calculated logs of emission probabilities and returned the sum HMM Viterbi: Calculated logs of emission probabilities and transition probabilities Complex:
+#### Assumptions 
+For all the models, if we encounter a new word, emission probability was set to be 1/10^10
 ***
 ### [Part 2: Ice tracking](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/tree/master/part2)
 
@@ -56,13 +65,17 @@ And for ice-rock boundary -
   - trans_2 = [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0] - close to a Guassian distribution.
   - trans_2 works better than trans1 as it considers more possibilities on the two sides of the row and less aggressive nearer to the row and exponentially aggressive farther away from the row.
 
+
+###### Original Image
 ![Original Image](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/test_images/23.png)
 
-Using - [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
+<code>python3 ./polar.py test_images/23.png 147 35 148 68</code>
+
+###### Using - [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
 ![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
 ![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output.png)
 
-Using - [0.5, 0.4, 0.1]
+##### Using - [0.5, 0.4, 0.1]
 ![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
 ![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output_low_transition.png)
 
