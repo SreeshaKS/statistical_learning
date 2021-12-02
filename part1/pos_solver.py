@@ -206,6 +206,48 @@ class Solver:
         # return ["noun"] * len(sentence)
 
     def complex_mcmc(self, sentence):
+        MAX_ITERATIONS = 5000
+        P_DEFAULT = 0.0000000000000000000000000001
+        pos_tags = self.simplified(sentence)
+        for step in range(MAX_ITERATIONS):
+            for index, word in enumerate(sentence):
+                p_samples = []
+                if len(sentence) == 1:
+                    for state_pos in self.pos:
+                        p_samples += [
+                            self.p_emission.get((word, state_pos), P_DEFAULT)
+                            * self.p_initial[state_pos]
+                        ]
+                elif index == 0:
+                    for state_pos in self.pos:
+                        p_samples += [
+                            self.p_emission.get((word, state_pos), P_DEFAULT)
+                            * self.p_initial[state_pos]
+                            * self.p_transition.get((state_pos, pos_tags[index + 1]), P_DEFAULT)
+                        ]
+                elif word == len(pos_tags) - 1:
+                    for state_pos in self.pos:
+                        p_samples += [
+                            self.p_emission.get((word, state_pos), P_DEFAULT)
+                            * self.p_transition.get((pos_tags[index - 1, pos_tags[0]]), P_DEFAULT)
+                            * self.p_emission.get((word, pos_tags[index - 1]), P_DEFAULT)
+                            * self.p_transition.get((state_pos, pos_tags[index - 1]), P_DEFAULT)
+                        ]
+                elif index < len(sentence)-1:
+                    for state_pos in self.pos:
+                        p_samples += [
+                            self.p_emission.get((word, state_pos), P_DEFAULT)
+                            * self.p_emission.get((sentence[index - 1], pos_tags[index - 1]), P_DEFAULT)
+                            * self.p_emission.get((word, pos_tags[index - 1]), P_DEFAULT)
+                            * self.p_emission.get((sentence[index + 1], pos_tags[index]), P_DEFAULT)
+                            * self.p_emission.get((word, pos_tags[index + 1]), P_DEFAULT)
+                            * self.p_transition.get((sentence[index - 1], state_pos), P_DEFAULT)
+                            * self.p_transition.get((state_pos, pos_tags[index + 1]), P_DEFAULT)
+                        ]
+                Sum = sum(p_samples)
+                p_samples = [sample / Sum for sample in p_samples]
+                flip = random.uniform(0, 1)
+                # create weighted sample
         return ["noun"] * len(sentence)
 
     # This solve() method is called by label.py, so you should keep the interface the
