@@ -9,6 +9,7 @@
 
 from PIL import Image, ImageDraw, ImageFont
 import sys
+from char_recognizer import CharacRecognizer
 
 CHARACTER_WIDTH=14
 CHARACTER_HEIGHT=25
@@ -39,23 +40,8 @@ if len(sys.argv) != 4:
 train_letters = load_training_letters(train_img_fname)
 test_letters = load_letters(test_img_fname)
 
-## Below is just some sample code to show you how the functions above work. 
-# You can delete this and put your own code here!
-
-
-# Each training letter is now stored as a list of characters, where black
-#  dots are represented by *'s and white dots are spaces. For example,
-#  here's what "a" looks like:
-print("\n".join([ r for r in train_letters['a'] ]))
-
-# Same with test letters. Here's what the third letter of the test data
-#  looks like:
-print("\n".join([ r for r in test_letters[2] ]))
-
-
-
-# The final two lines of your output should look something like this:
-print("Simple: " + "Sample s1mple resu1t")
-print("   HMM: " + "Sample simple result") 
+cr = CharacRecognizer(train_letters, test_letters, train_txt_fname)
+print("Simple: " + cr.simplified())
+print("   HMM: " + cr.viterbi())  
 
 
