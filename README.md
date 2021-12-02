@@ -22,7 +22,6 @@ Your goal in this part is to implement part-of-speech tagging in Python, using B
 ***
 
 #### Problem Statement:
-
 In this problem, we’ll help solve global warming. :)
 
 #### Goal:
@@ -31,12 +30,46 @@ One is the very dark line near the top, which is the boundary between the air an
 In this part, we’ll create code to try to find these two boundaries (air-ice and ice-rock). We’ll make some assumptions to make this possible.
 
 #### Assumptions:
-
 First, you can assume that the air-ice boundary is always above the ice-rock boundary by a significant margin (say, 10 pixels). Second, you can assume that the two boundaries span the entire width of the image. Taken together these, two assumptions mean that in each column of the image, there is exactly one air-ice boundary and exactly one ice-rock boundary, and the ice-rock boundary is always below. Third, we assume that each boundary is relatively “smooth” — that is, a boundary’s row in one column will be similar in the next column. Finally, you can assume that the pixels along the boundaries are generally dark and along a strong image edge (sharp change in pixel values)..
 
 #### Command:
 <code>  python3 ./polar.py input_file.jpg airice_row_coord airice_col_coord icerock_row_coord icerock_col_coord
  </code>
+
+#### Approach
+##### 1. In the simple model, for air-ice we used numpy library to find the maximum row index in every column using the numpy.argmax() function.
+And for ice-rock boundary -
+- Set air ice boundary edge strength to zero.
+- numpy library to find the maximum row index in every column using the numpy.argmax() function.
+##### 2. For the HMM-viterbi model, to populate the transition probabilities, we used viterbi algorithm with dynamic programming and back tracking method.
+
+##### 3. When additional human feedback is given we just tweaked the previous logic, made that particular pixel's state probability maximum, so the resultant path will be the path that passes through the human labeled pixel always. 
+- set the p_distribution corresponding to the pixel to 1
+- recur right
+- recur left
+- update max probability coordinates through backward algorithm
+- repeat the same for ice-rock boundary
+
+##### 4. Transition offset probabilities are used to decrease the probability of pixels far away from the current row
+- Picked the below two values
+  - trans_1 = [0.5, 0.4, 0.1] - causes aggressive decrease in probabilities
+  - trans_2 = [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0] - close to a Guassian distribution.
+  - trans_2 works better than trans1 as it considers more possibilities on the two sides of the row and less aggressive nearer to the row and exponentially aggressive farther away from the row.
+
+![Original Image](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/test_images/23.png)
+
+Using - [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
+![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
+![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output.png)
+
+Using - [0.5, 0.4, 0.1]
+![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
+![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output_low_transition.png)
+
+#### References:
+##### 1. http://www.cs.cmu.edu/~guestrin/Class/10701/slides/hmms-structurelearn.pdf
+##### 4. https://web.stanford.edu/~jurafsky/slp3/A.pdf
+##### 5. Canvas lecture slides
 
 ### [Part 3: Reading text](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/tree/master/part3)
 
