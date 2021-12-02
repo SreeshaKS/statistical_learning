@@ -1,5 +1,4 @@
 # amanurk-arushuk-sskuruva-a3
-a3 created for amanurk-arushuk-sskuruva
 
 ## PART 3:
  Naive Bayes Assumption based probabilities are the key to good Image Character Recognition. The emmission probabilities with the assumption works well only for clean images of charcters. However, this works significantly well even for the the images with lot of noice in addition to clear character pixel values being present. This happens when we only match the grids pixels which match in the test and train images. Having defined the probabilities to the "unmatched" factor greatly improves recognition of images with sparse pixels (eg : test-16.png test-8.png). 
