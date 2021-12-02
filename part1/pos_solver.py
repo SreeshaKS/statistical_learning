@@ -47,7 +47,7 @@ class Solver:
 
 
     # This solve() method is called by label.py, so you should keep the interface the
-    #  same, but you can change the code itself. 
+    #  same, but you can change the code itself.
     # It should return a list of part-of-speech labelings of the sentence, one
     #  part of speech per word.
     #

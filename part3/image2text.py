@@ -3,12 +3,16 @@
 # Perform optical character recognition, usage:
 #     python3 ./image2text.py train-image-file.png train-text.txt test-image-file.png
 # 
-# Authors: (insert names here)
+# Authors: 
+# Arunima Shukla <arushuk@iu.edu>
+# Sreesha Srinivasan Kuruvadi <sskuruva@iu.edu>
+# Adit Manurkar <amanurk@iu.edu>
 # (based on skeleton code by D. Crandall, Oct 2020)
 #
 
 from PIL import Image, ImageDraw, ImageFont
 import sys
+from char_recognizer import CharacRecognizer
 
 CHARACTER_WIDTH=14
 CHARACTER_HEIGHT=25
@@ -18,8 +22,8 @@ def load_letters(fname):
     im = Image.open(fname)
     px = im.load()
     (x_size, y_size) = im.size
-    print(im.size)
-    print(int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH)
+    # print(im.size)
+    # print(int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH)
     result = []
     for x_beg in range(0, int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH, CHARACTER_WIDTH):
         result += [ [ "".join([ '*' if px[x, y] < 1 else ' ' for x in range(x_beg, x_beg+CHARACTER_WIDTH) ]) for y in range(0, CHARACTER_HEIGHT) ], ]
@@ -39,23 +43,8 @@ if len(sys.argv) != 4:
 train_letters = load_training_letters(train_img_fname)
 test_letters = load_letters(test_img_fname)
 
-## Below is just some sample code to show you how the functions above work. 
-# You can delete this and put your own code here!
-
-
-# Each training letter is now stored as a list of characters, where black
-#  dots are represented by *'s and white dots are spaces. For example,
-#  here's what "a" looks like:
-print("\n".join([ r for r in train_letters['a'] ]))
-
-# Same with test letters. Here's what the third letter of the test data
-#  looks like:
-print("\n".join([ r for r in test_letters[2] ]))
-
-
-
-# The final two lines of your output should look something like this:
-print("Simple: " + "Sample s1mple resu1t")
-print("   HMM: " + "Sample simple result") 
+cr = CharacRecognizer(train_letters, test_letters, train_txt_fname)
+print("Simple: " + cr.simplified())
+print("   HMM: " + cr.viterbi())  
 
 
