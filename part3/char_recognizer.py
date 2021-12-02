@@ -58,7 +58,7 @@ class CharacRecognizer:
                 match_score,blanks = self.compare_letters(test_letter, train_letter_grid)
                 unmatch_score = total_pixels - match_score - blanks
                 match_prob = (match_score + 0.0) / total_pixels
-                prob = (0.70 * match_score + 0.25 * blanks + 0.05 * unmatch_score) / (CHARACTER_WIDTH * CHARACTER_HEIGHT) # 0.70 * match_prob + 0.25 * blanks + 0.05 * (1 - match_prob) is given to weigh the matches, misses and blanks in the grid comparisons. Basing this on Naive Bayes assumption of havin some prior probabailities
+                prob = (0.75 * match_score + 0.20 * blanks + 0.05 * unmatch_score) / (CHARACTER_WIDTH * CHARACTER_HEIGHT) # 0.70 * match_prob + 0.25 * blanks + 0.05 * (1 - match_prob) is given to weigh the matches, misses and blanks in the grid comparisons. Basing this on Naive Bayes assumption of havin some prior probabailities
                 if self.emission_prob[test_letter_index]:
                     if self.emission_prob[test_letter_index][train_letter]:
                         if prob != 0:

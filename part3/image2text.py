@@ -22,8 +22,8 @@ def load_letters(fname):
     im = Image.open(fname)
     px = im.load()
     (x_size, y_size) = im.size
-    print(im.size)
-    print(int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH)
+    # print(im.size)
+    # print(int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH)
     result = []
     for x_beg in range(0, int(x_size / CHARACTER_WIDTH) * CHARACTER_WIDTH, CHARACTER_WIDTH):
         result += [ [ "".join([ '*' if px[x, y] < 1 else ' ' for x in range(x_beg, x_beg+CHARACTER_WIDTH) ]) for y in range(0, CHARACTER_HEIGHT) ], ]
