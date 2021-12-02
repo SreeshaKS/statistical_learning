@@ -50,6 +50,7 @@ def draw_asterisk(image, pt, color, thickness):
 def write_output_image(filename, image, simple, hmm, feedback, feedback_pt):
     new_image = draw_boundary(image, simple, (255, 255, 0), 2)
     new_image = draw_boundary(new_image, hmm, (0, 0, 255), 2)
+    imageio.imwrite('test.png', new_image)
     new_image = draw_boundary(new_image, feedback, (255, 0, 0), 2)
     new_image = draw_asterisk(new_image, feedback_pt, (255, 0, 0), 2)
     imageio.imwrite(filename, new_image)
@@ -73,7 +74,6 @@ def hmm(edge_strength_matrix, p_transition):
         # initial probability * observation probability
         # p_state[row][0] = edge_strength_matrix[row][0] * (edge_strength_matrix[row][0] / col_sums[0])
         p_state[row][0] = edge_strength_matrix[row][0] / s
-
 
     # calculating state probabilities of each node using viterbi
     # for col in range(1, col_size):
@@ -120,7 +120,8 @@ def viterbi_recur(col_loop, row_loop, col_size, row_size, p_state, back_pointer,
     for col in range(col_start, col_stop, col_step):
         for row in range(row_start, row_stop, row_step):
             p_maximum = 0
-            for j in range(-4, 5):
+            l = len(p_transition_offset)
+            for j in range(-(l - 1), l):
                 if (row + j < row_size) and (row + j >= 0):
                     if p_maximum < p_state[row + j][col - 1] * p_transition_offset[abs(j)]:
                         p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
@@ -179,7 +180,12 @@ if __name__ == "__main__":
     # ********************** Viterbi-AirIce ***************************************************
 
     edge_strength_matrix = edge_strength(input_image)
-    p_transition_offset = [0.5, 0.4, 0.1, 0.5, 0.005]
+    # p_transition_offset = [0.5, 0.4, 0.1, 0.5, 0.005]
+    p_transition_offset = [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
+    # https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
+    mu, sigma = 0, 0.1  # mean and standard deviation
+    s = np.random.normal(mu, sigma, 5)
+
     airice_hmm, airice_p_state, airice_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
 
     # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
@@ -215,7 +221,7 @@ if __name__ == "__main__":
     # remove air-ice boundary
     for index, y_coord in enumerate(airice_hmm):
         i = 0
-        while i < 12:
+        while i < 10:
             edge_strength_matrix[int(y_coord) - i][index] = 0
             edge_strength_matrix[int(y_coord) + i][index] = 0
             i += 1
@@ -249,8 +255,6 @@ if __name__ == "__main__":
     icerock_feedback = back_track(icerock_p_state, col_size, icerock_hmm, icerock_back_pointer)
     # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
     # ********************** Viterbi-IceRock ***************************************************
-
-    edge_strength_matrix = edge_strength(input_image)
 
     # You'll need to add code here to figure out the results! For now,
     # just create some random lines.
