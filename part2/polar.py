@@ -45,12 +45,14 @@ def draw_asterisk(image, pt, color, thickness):
     return image
 
 
+def get_image(image, points, color):
+    (r, g, b) = color
+    return draw_boundary(image, np.copy(points), (r, g, b), 2)
 # Save an image that superimposes three lines (simple, hmm, feedback) in three different colors 
 # (yellow, blue, red) to the filename
 def write_output_image(filename, image, simple, hmm, feedback, feedback_pt):
     new_image = draw_boundary(image, simple, (255, 255, 0), 2)
     new_image = draw_boundary(new_image, hmm, (0, 0, 255), 2)
-    imageio.imwrite('test.png', new_image)
     new_image = draw_boundary(new_image, feedback, (255, 0, 0), 2)
     new_image = draw_asterisk(new_image, feedback_pt, (255, 0, 0), 2)
     imageio.imwrite(filename, new_image)
@@ -75,16 +77,6 @@ def hmm(edge_strength_matrix, p_transition):
         # p_state[row][0] = edge_strength_matrix[row][0] * (edge_strength_matrix[row][0] / col_sums[0])
         p_state[row][0] = edge_strength_matrix[row][0] / s
 
-    # calculating state probabilities of each node using viterbi
-    # for col in range(1, col_size):
-    #     for row in range(row_size):
-    #         p_maximum = 0
-    #         for j in range(-4, 5):
-    #             if (row + j < row_size) and (row + j >= 0):
-    #                 if p_maximum < p_state[row + j][col - 1] * p_transition[abs(j)]:
-    #                     p_maximum = p_state[row + j][col - 1] * p_transition[abs(j)]
-    #                     back_pointer[row][col] = row + j
-    #                 p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
     p_state, back_pointer = viterbi_recur(
         (1, col_size, 1),
         (0, row_size, 1),
@@ -95,12 +87,6 @@ def hmm(edge_strength_matrix, p_transition):
         p_transition
     )
     viterbi = back_track(p_state, col_size, viterbi, back_pointer)
-    # p_max_index = argmax(p_state[:, col_size - 1])
-    #
-    # for col in range(col_size - 1, -1, -1):
-    #     viterbi[col] = int(p_max_index)
-    #     p_max_index = back_pointer[int(p_max_index)][col]
-
     return viterbi, p_state, back_pointer
 
 
@@ -127,15 +113,6 @@ def viterbi_recur(col_loop, row_loop, col_size, row_size, p_state, back_pointer,
                         p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
                         back_pointer[row][col] = row + j
                     p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
-    # for col in range(col_start, col_stop, col_step):
-    #     for row in range(row_start, row_stop, row_step):
-    #         p_maximum = 0
-    #         for j in range(-2, 3):
-    #             if (row + j < row_size) and (row + j >= 0):
-    #                 if p_maximum < p_state[row + j][col - 1] * p_transition_offset[abs(j)]:
-    #                     p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
-    #                     back_pointer[row][col] = row + j
-    #                 p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
     return p_state, back_pointer
 
 
@@ -153,41 +130,45 @@ if __name__ == "__main__":
 
     # load in image
     input_image = Image.open(input_filename).convert('RGB')
+    icerock_input_image = Image.open(input_filename).convert('RGB')
     image_array = array(input_image.convert('L'))
 
     # compute edge strength mask -- in case it's helpful. Feel free to use this.
-    edge_strength_matrix = edge_strength(input_image)
-    imageio.imwrite('edges.png', uint8(255 * edge_strength_matrix / (amax(edge_strength_matrix))))
+    edge_strength_matrix_simple = edge_strength(input_image)
+    imageio.imwrite('edges.png', uint8(255 * edge_strength_matrix_simple / (amax(edge_strength_matrix_simple))))
     import pdb
 
-    col_size = edge_strength_matrix.shape[1]
-    row_size = edge_strength_matrix.shape[0]
+    col_size = edge_strength_matrix_simple.shape[1]
+    row_size = edge_strength_matrix_simple.shape[0]
     # ********************** Simplified ***************************************************
-    airice_simple = argmax(edge_strength_matrix, axis=0)
-    edge_strength_matrix = edge_strength_matrix.tolist()
+    airice_simple = argmax(edge_strength_matrix_simple, axis=0)
+    edge_strength_matrix = edge_strength_matrix_simple.tolist()
+
+    airice_final_image = get_image(input_image, airice_simple, (255, 255, 0))
 
     icerock_simple = []
     for idx, row in enumerate(airice_simple):
         i = 0
         r = []
-        while i < 10:
-            edge_strength_matrix[row - i][idx] = -1
+        while i < 12:
+            edge_strength_matrix_simple[row - i][idx] = -1
+            edge_strength_matrix_simple[row + i][idx] = -1
             i += 1
 
-    icerock_simple = argmax(edge_strength_matrix, axis=0)
+    icerock_simple = argmax(edge_strength_matrix_simple, axis=0)
+    icerock_final_image = get_image(icerock_input_image, icerock_simple, (255, 255, 0))
     # ********************** Simplified ***************************************************
 
     # ********************** Viterbi-AirIce ***************************************************
 
     edge_strength_matrix = edge_strength(input_image)
-    # p_transition_offset = [0.5, 0.4, 0.1, 0.5, 0.005]
+    # p_transition_offset = [0.5, 0.4, 0.1]
     p_transition_offset = [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
     # https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
-    mu, sigma = 0, 0.1  # mean and standard deviation
-    s = np.random.normal(mu, sigma, 5)
-
+    # mu, sigma = 0, 0.1  # mean and standard deviation
+    # s = np.random.normal(mu, sigma, 5)
     airice_hmm, airice_p_state, airice_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
-
+    airice_final_image = get_image(airice_final_image, airice_hmm, (0, 0, 255))
     # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
     # tweak probability distribution
     for row in range(row_size):
@@ -214,6 +195,7 @@ if __name__ == "__main__":
         p_transition_offset
     )
     airice_feedback = back_track(p_state, col_size, airice_hmm, airice_back_pointer)
+    airice_final_image = get_image(airice_final_image, airice_feedback, (255, 0, 0))
     # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
     # ********************** Viterbi-AirIce ***************************************************
 
@@ -221,12 +203,13 @@ if __name__ == "__main__":
     # remove air-ice boundary
     for index, y_coord in enumerate(airice_hmm):
         i = 0
-        while i < 10:
+        while i < 12:
             edge_strength_matrix[int(y_coord) - i][index] = 0
             edge_strength_matrix[int(y_coord) + i][index] = 0
             i += 1
 
     icerock_hmm, icerock_p_state, icerock_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
+    icerock_final_image = get_image(icerock_final_image, icerock_hmm, (0, 0, 255))
     # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
     # tweak probability distribution
     for row in range(row_size):
@@ -253,6 +236,7 @@ if __name__ == "__main__":
         p_transition_offset
     )
     icerock_feedback = back_track(icerock_p_state, col_size, icerock_hmm, icerock_back_pointer)
+    icerock_final_image = get_image(icerock_final_image, icerock_feedback, (255, 0, 0))
     # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
     # ********************** Viterbi-IceRock ***************************************************
 
@@ -264,10 +248,15 @@ if __name__ == "__main__":
     # icerock_simple = [image_array.shape[0] * 0.25] * image_array.shape[1]
     # icerock_hmm = [image_array.shape[0] * 0.5] * image_array.shape[1]
     # icerock_feedback = [image_array.shape[0] * 0.75] * image_array.shape[1]
-
+    airice_final_image = draw_asterisk(airice_final_image, gt_airice, (255, 0, 0), 2)
+    icerock_final_image = draw_asterisk(icerock_final_image, gt_icerock, (255, 0, 0), 2)
+    imageio.imwrite("air_ice_output.png", airice_final_image)
+    imageio.imwrite("ice_rock_output.png", icerock_final_image)
     # Now write out the results as images and a text file
-    write_output_image("air_ice_output.png", input_image, airice_simple, airice_hmm, airice_feedback, gt_airice)
-    write_output_image("ice_rock_output.png", input_image, icerock_simple, icerock_hmm, icerock_feedback, gt_icerock)
+    # write_output_image("air_ice_output2.png", input_image, airice_simple, airice_hmm, [], gt_airice)
+    # write_output_image("ice_rock_output2.png", input_image, icerock_simple, icerock_hmm, [], gt_icerock)
+    # write_output_image("air_ice_output.png", input_image, airice_simple, airice_hmm, airice_feedback, gt_airice)
+    # write_output_image("ice_rock_output.png", input_image, icerock_simple, icerock_hmm, icerock_feedback, gt_icerock)
     with open("layers_output.txt", "w") as fp:
         for i in (airice_simple, airice_hmm, airice_feedback, icerock_simple, icerock_hmm, icerock_feedback):
             fp.write(str(i) + "\n")
