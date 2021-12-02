@@ -7,6 +7,7 @@
 #
 
 from PIL import Image
+import math
 from numpy import *
 from scipy.ndimage import filters
 import sys
@@ -48,7 +49,9 @@ def draw_asterisk(image, pt, color, thickness):
 def get_image(image, points, color):
     (r, g, b) = color
     return draw_boundary(image, np.copy(points), (r, g, b), 2)
-# Save an image that superimposes three lines (simple, hmm, feedback) in three different colors 
+
+
+# Save an image that superimposes three lines (simple, hmm, feedback) in three different colors
 # (yellow, blue, red) to the filename
 def write_output_image(filename, image, simple, hmm, feedback, feedback_pt):
     new_image = draw_boundary(image, simple, (255, 255, 0), 2)
@@ -87,7 +90,7 @@ def hmm(edge_strength_matrix, p_transition):
         p_transition
     )
     viterbi = back_track(p_state, col_size, viterbi, back_pointer)
-    return viterbi, p_state, back_pointer
+    return viterbi, p_state, back_pointer, edge_strength_matrix
 
 
 def back_track(p_state, col_size, viterbi, back_pointer):
@@ -104,7 +107,9 @@ def viterbi_recur(col_loop, row_loop, col_size, row_size, p_state, back_pointer,
     row_start, row_stop, row_step = row_loop
 
     for col in range(col_start, col_stop, col_step):
+        # for each state row1->row_next
         for row in range(row_start, row_stop, row_step):
+            #  max over the previous path probabilities
             p_maximum = 0
             l = len(p_transition_offset)
             for j in range(-(l - 1), l):
@@ -112,7 +117,8 @@ def viterbi_recur(col_loop, row_loop, col_size, row_size, p_state, back_pointer,
                     if p_maximum < p_state[row + j][col - 1] * p_transition_offset[abs(j)]:
                         p_maximum = p_state[row + j][col - 1] * p_transition_offset[abs(j)]
                         back_pointer[row][col] = row + j
-                    p_state[row][col] = (edge_strength_matrix[row][col] / 100) * p_maximum
+                    # overflowing floating point, hence divided by 100
+                    p_state[row][col] = edge_strength_matrix[row][col] * p_maximum / 100
     return p_state, back_pointer
 
 
@@ -167,7 +173,8 @@ if __name__ == "__main__":
     # https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
     # mu, sigma = 0, 0.1  # mean and standard deviation
     # s = np.random.normal(mu, sigma, 5)
-    airice_hmm, airice_p_state, airice_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
+    airice_hmm, airice_p_state, airice_back_pointer, edge_strength_matrix = hmm(edge_strength_matrix,
+                                                                                p_transition_offset)
     airice_final_image = get_image(airice_final_image, airice_hmm, (0, 0, 255))
     # ********************** HumanFeedback - Viterbi-AirIce ***************************************************
     # tweak probability distribution
@@ -208,7 +215,8 @@ if __name__ == "__main__":
             edge_strength_matrix[int(y_coord) + i][index] = 0
             i += 1
 
-    icerock_hmm, icerock_p_state, icerock_back_pointer = hmm(edge_strength_matrix, p_transition_offset)
+    icerock_hmm, icerock_p_state, icerock_back_pointer, edge_strength_matrix = hmm(edge_strength_matrix,
+                                                                                   p_transition_offset)
     icerock_final_image = get_image(icerock_final_image, icerock_hmm, (0, 0, 255))
     # ********************** HumanFeedback - Viterbi-IceRock ***************************************************
     # tweak probability distribution
