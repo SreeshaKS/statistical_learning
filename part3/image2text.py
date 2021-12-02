@@ -3,7 +3,10 @@
 # Perform optical character recognition, usage:
 #     python3 ./image2text.py train-image-file.png train-text.txt test-image-file.png
 # 
-# Authors: (insert names here)
+# Authors: 
+# Arunima Shukla <arushuk@iu.edu>
+# Sreesha Srinivasan Kuruvadi <sskuruva@iu.edu>
+# Adit Manurkar <amanurk@iu.edu>
 # (based on skeleton code by D. Crandall, Oct 2020)
 #
 
