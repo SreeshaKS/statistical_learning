@@ -68,24 +68,24 @@ And for ice-rock boundary -
 
 
 ###### Original Image
-![Original Image](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/test_images/23.png)
+![Original Image](https://github.com/SreeshaKS/statistical_learning/blob/master/part2/test_images/23.png)
 
 <code>python3 ./polar.py test_images/23.png 147 35 148 68</code>
 
 ###### Using - [0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.01, 0.005, 0.0005, 0.00005, 0]
-![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
-![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output.png)
+![Air-ice boundary](https://github.com/SreeshaKS/statistical_learning/blob/master/part2/air_ice_output.png)
+![Ice-rock boundary](https://github.com/SreeshaKS/statistical_learning/blob/master/part2/ice_rock_output.png)
 
 ##### Using - [0.5, 0.4, 0.1]
-![Air-ice boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/air_ice_output.png)
-![Ice-rock boundary](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/blob/master/part2/ice_rock_output_low_transition.png)
+![Air-ice boundary](https://github.com/SreeshaKS/statistical_learning/blob/master/part2/air_ice_output.png)
+![Ice-rock boundary](https://github.com/SreeshaKS/statistical_learning/blob/master/part2/ice_rock_output_low_transition.png)
 
 #### References:
 ##### 1. http://www.cs.cmu.edu/~guestrin/Class/10701/slides/hmms-structurelearn.pdf
 ##### 4. https://web.stanford.edu/~jurafsky/slp3/A.pdf
 ##### 5. Canvas lecture slides
 
-### [Part 3: Reading text](https://github.iu.edu/cs-b551-fa2021/amanurk-arushuk-sskuruva-a3/tree/master/part3)
+### [Part 3: Reading text](https://github.com/SreeshaKS/statistical_learning/tree/master/part3)
 
 
 #### Problem Statement
